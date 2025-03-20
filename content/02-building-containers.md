@@ -35,7 +35,7 @@ Fill the `dockerfile` with the following contents:
 
 ```dockerfile
 # My first Dockerfile
-FROM python:3.6-stretch
+FROM python:3.13-bookworm
 
 ENTRYPOINT echo Hello World
 ```
@@ -83,7 +83,7 @@ Our first command was **FROM**:
 - `FROM [image-name]`
   This bases our new image off the **base image** specified by `[image-name]`, on top of which our changes get layered like new layers of paint on a painting. That name might refer to an image you already have on your computer, or possibly an image published on Docker Hub. Either way, all dockerfiles must start with a FROM command.
 
-  In this case our base image was `python:3.6-stretch`, a container that already comes with Linux and Python 3.6 pre-installed. If we wanted to base an image off the latest version of Ubuntu Linux, it might look something like this: `FROM ubuntu:latest`.
+  In this case our base image was `python:3.13-bookworm`, a container that already comes with Linux and Python 3.13 pre-installed. If we wanted to base an image off the latest version of Ubuntu Linux, it might look something like this: `FROM ubuntu:latest`.
 
 Then, we issued an **ENTRYPOINT** command:
 
@@ -116,7 +116,7 @@ Let's add a new command to our Dockerfile:
 
 ```dockerfile
 # My first Dockerfile
-FROM python:3.6-stretch
+FROM python:3.13-bookworm
 
 # New command:
 RUN echo Hello Galaxy
@@ -150,11 +150,11 @@ user@debian:~/hello-world$ docker build --no-cache --progress plain -t naclomi/h
 #2 transferring context: 2B done
 #2 DONE 0.0s
 
-#3 [internal] load metadata for docker.io/library/python:3.6-stretch
+#3 [internal] load metadata for docker.io/library/python:3.13-bookworm
 #3 sha256:7cb3ce616859dfaaede09c8af55110806d0d186b2719d544c5463328c00bc1d9
 #3 DONE 0.4s
 
-#4 [1/2] FROM docker.io/library/python:3.6-stretch@sha256:654dd3f75f34c7075c118de1d7733613983140ab63bebdd2a5857e50b300924b
+#4 [1/2] FROM docker.io/library/python:3.13-bookworm@sha256:654dd3f75f34c7075c118de1d7733613983140ab63bebdd2a5857e50b300924b
 #4 sha256:a26bfb5fba3b2d8328b71b8c4c44aa04820538404263c11cf0070c63075488e6
 #4 CACHED
 
@@ -224,7 +224,7 @@ Make sure your files are arranged this way before your proceed.
 Next, let's put some code in our Dockerfile:
 
 ```dockerfile
-FROM python:3.6-stretch
+FROM python:3.13-bookworm
 
 WORKDIR  /usr/src/textbook-writer
 COPY src ./src
@@ -282,7 +282,7 @@ It looks like "markovify" is a Python library used for generating gibberish text
 We'll add a command to our Dockerfile to install this library at build time, so that nobody else has to worry about this software dependency ever again. Modify your Dockerfile to include the following RUN command:
 
 ```dockerfile
-FROM python:3.6-stretch
+FROM python:3.13-bookworm
 
 # New line of code:
 RUN pip3 install markovify
@@ -329,7 +329,7 @@ This is called **exec form**. Instead of typing the command out normally, we sur
 Docker containers will only pass command line arguments to the entrypoint if it is specified in exec form. So let's update our dockerfile:
 
 ```dockerfile
-FROM python:3.6-stretch
+FROM python:3.13-bookworm
 
 RUN pip3 install markovify
 
@@ -358,7 +358,7 @@ At run-time, the `CMD` command will glue whatever flags you specify in its list 
 So! If we wanted to by default generate 4 sentences of text, unless the user specified otherwise, we could write a Dockerfile like this:
 
 ```dockerfile
-FROM python:3.6-stretch
+FROM python:3.13-bookworm
 
 RUN pip3 install markovify
 
