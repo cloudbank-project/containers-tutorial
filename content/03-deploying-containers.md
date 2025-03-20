@@ -64,28 +64,10 @@ A classic example might be to develop an ML model training script on your comput
 
 ## Setting up the Azure CLI
 
-There are many ways to run a Docker container in Microsoft Azure. The most general-purpose of which is a service they provide called **Azure Container Instances**. We'll use the **Azure CLI** to interact with it. Make sure your terminal is logged in to Azure with the command by runnign this command and then following its instructions:
+There are many ways to run a Docker container in Microsoft Azure. The most general-purpose of which is a service they provide called **Azure Container Instances**. We'll use the **Azure CLI** to interact with it. Make sure your terminal is logged in to Azure with the command by running this command and then following its instructions. It may ask you which subscription to use -- **your course staff should tell you which one to use for this class. If you're not sure, ask them.**
 
 ```bash
 az login
-```
-
-To make our lives a little easier down the road, let's tell the `az` command what Azure subscriptions and resource groups we want it to work with by default. 
-
-We'll start by setting the CLI to use this subscription by default, so we don't have to specify it for every `az` command we run. Look up the subscriptions available to you with this command:
-
-```bash
-az account list --output table
-```
-
-Find the one that has your class's name in it:
-
-![](../img/subscriptions.png)
-
-Run this command in your terminal, replacing `[SUBSCRIPTION-NAME]` with the complete name of this class's subcription (the one that includes the text `MSE544`):
-
-```bash
-az account set --subscription "[SUBSCRIPTION-NAME]"
 ```
 
 Next, we'll tell the CLI what **resource group** to work within. The resource group is specific to you, and is like a cloud "folder" containing all of the Azure services you'll create or use. Find its name by running the following command:
@@ -110,17 +92,80 @@ az resource list --output table
 
 If your CLI is configured properly, this command will return all of the Azure services and objects currently in your resource group (which you can also inspect through the Azure web portal -- it's the same stuff, just a different method of interacting with it).
 
-
 ## Running containers in Azure
+
+### Getting the image into Azure
+
+We already pushed our image to Dockerhub, but to use it in the Azure cloud we'll need to push it there too. Azure accounts can store container images very much like Dockerhub does, in something called a **container registry**. Dockerhub itself is a container registry that's public and accessible from your laptop. For this section, we're going to use a private container registry housed in your Azure resource group. 
+
+Scroll back up to the output of that `az resource list --output table` command you ran. You should find a container registry named like `contreg[_____]`, where the `[_____]` is your UW NetID:
+
+![](../img/contreg.png)
+ 
+We can connect the `docker` command to it (so that we can push images to it) by running the command:
+
+```bash
+ az acr login --name [YOUR-REGISTRY-NAME]
+```
+
+Where the `[YOUR-REGISTRY-NAME]` is replaced with your container registry's name (including the `contreg` part at the beginning). If it worked, you should see the message `Login Succeeded`.
+
+Next, try running the command:
+
+```bash
+az acr show-endpoints --name [YOUR-REGISTRY-NAME] --output table
+```
+
+This will show us a table of URLs. The 'LoginServer' represents the registry's location on the internet. **We'll call this "the registry's URL" from here on out**:
+
+![](../img/contreg-url.png)
+
+We can push and pull images from the registry by preceding any image name with that URL and a slash. So, while this would refer to Naomi's textbook image on Dockerhub:
+
+```bash
+nananaomi/my-textbook
+```
+
+this would refer to the same image stored in her Azure container registry:
+
+```bash
+contregnananaomi.azurecr.io/nananaomi/my-textbook
+```
+
+With all that out of the way, let's push our textbook writer to the container registry. Start by adding a new tag to your image that starts with your registry URL, replacing the `[...]` segments as necessary in the command below:
+
+```bash
+docker tag [YOUR-DOCKERHUB-USERNAME]/my-textbook [YOUR-CONTAINER-REGISTRY-URL/[YOUR-DOCKERHUB-USERNAME]/my-textbook
+```
+
+Then push it:
+
+```bash
+docker push [YOUR-CONTAINER-REGISTRY-URL/[YOUR-DOCKERHUB-USERNAME]/my-textbook
+```
+
+The image will take a few minutes to upload. After it's done, you should be able to verify Azure has it with this command:
+
+```bash
+az acr repository list --name [YOUR-CONTAINER-REGISTRY-NAME]
+```
+
+If it's not there, ask your course staff for help.
+
+### Running your image
 
 To run a container as an Azure Container Instance we'll use the `az container create` command, which is like a cloud version of `docker pull` and `docker run` combined into one command. It'll take the following form:
 
 ```bash
 az container create \
   --name [INSTANCE NAME] \
-  --image [DOCKER IMAGE NAME]
+  --image [PUSHED IMAGE NAME]
+  --os-type Linux \
   --cpu [CORES] \
   --memory [GB RAM] \
+  --registry-login-server [CONTAINER REGISTRY NAME].azurecr.io \
+  --registry-username $(az acr credential show --name [CONTAINER REGISTRY NAME] --output tsv --query 'username') \
+  --registry-password $(az acr credential show --name [CONTAINER REGISTRY NAME] --output tsv --query 'passwords[0].value') \
   --restart-policy Never \
   --no-wait
 ```
@@ -128,9 +173,11 @@ az container create \
 There's a lot going on here. Let's step through it:
 
 * The `[INSTANCE NAME]` is a name you'll use to refer to this container in your cloud account. It can be whatever you want as long as it doesn't have spaces. Let's use something like `my-cloud-textbook`.
-* The `[DOCKER IMAGE NAME]` refers to the image you published onto Docker Hub. In the case of this tutorial, that was `[DOCKERHUB USERNAME]/my-textbook`, putting your user name in the appropriate spot.
+* The `[PUSHED IMAGE NAME]` refers to the image you pushed to your container registry. In the case of this tutorial, that was `[YOUR CONTAINTER REGISTRY URL]/[DOCKERHUB USERNAME]/my-textbook`
+* The `--os-type Linux` flag specifies the operating system our image uses. That is: Linux.
 * The `--cpu [CORES]` flag specifies how many CPU cores we need to run our container. We're not doing much computation for this example, so to save money let's set it to something small like `0.5`. 
 * The `--memory [GB RAM]` flag specifies how much RAM we need to run our container. Similarly to the CPU flag, let's use `0.5`. 
+* The `--registry-login-server`, `--registry-username` and `--registry-password` fields all tell Azure how to log into and get images out of your container registry. There is a lot of complex stuff here -- just make sure to fill in your registry's URL in the right spot in each flag, and you should be fine. Ask your course staff if you're curious about how these lines work.
 * The `--restart-policy Never` flag tells Azure that after our container finishes running, it should just be left in a stopped state. **This is important**, because without it **the container would get re-run in a loop indefinitely**, until we manually stopped it, and this could use up a lot of resources (eg, $$$). The default behavior is useful when a container runs an always-available service like a web server, but for our purposes is really really not what we want.
 * The `--no-wait` flag tells the terminal to not hang and wait until the container is set up. Deployment can take a while, since Azure has to find an unused computer in the cloud and download our image to it, so this will let us do other terminal operations while that all is happening.
 
@@ -148,7 +195,7 @@ Right now the container's status is `Pending`, but after a few minutes it should
 
 ```bash
 az container logs --name my-cloud-textbook
-``` 
+```
 
 If you named your container instance something else, just replace `my-cloud-textbook` with the appropriate value.
 
@@ -162,7 +209,7 @@ If the command doesn't output anything, or returns an error, try waiting a bit l
 az container show --name my-cloud-textbook
 ```
 
-This outputs a lot of detailed information about the container, including when it started and completed pulling the image from Docker Hub:
+This outputs a lot of detailed information about the container, including when it started and completed pulling the image from the container registry:
 
 ![cloud_progress](../img/cloud_progress.png)
 
@@ -271,14 +318,17 @@ The command will look like:
 ```bash
 az container create \
    --name my-cloud-textbook \
-   --image naclomi/textbook-writer \
+   --image [PUSHED IMAGE NAME] \
    --cpu 0.5 --memory 0.5 \
    --restart-policy Never --no-wait \
    --command-line "python3 src/main.py --pdf /output/text.pdf" \
+   --registry-login-server [CONTAINER REGISTRY NAME].azurecr.io \
+   --registry-username $(az acr credential show --name [CONTAINER REGISTRY NAME] --output tsv --query 'username') \
+   --registry-password $(az acr credential show --name [CONTAINER REGISTRY NAME] --output tsv --query 'passwords[0].value') \
    --azure-file-volume-account-name [STORAGE ACCOUNT NAME] \
    --azure-file-volume-account-key [STORAGE ACCOUNT KEY] \
    --azure-file-volume-share-name [FILE SHARE NAME] \
-   --azure-file-volume-mount-path output 
+   --azure-file-volume-mount-path output
 ```
 
 Oof, it's complicated, but it's powerful. Good job command line warrior. Run it, and then wait a minute or two for Azure to complete its work. As before, you can check the status of the container with the command:
@@ -300,6 +350,12 @@ From here, we can open the file up using your computer's file explorer:
 Congratulations -- this was a lot of steps for some pretty advanced computing, and you did it!
 
 Now that the file share is created, you can rerun the container with `az container start` or create new ones that connect to the share with `az container create` as much as you like. The steps preceding the `az container create` command only have to be done once.
+
+############################
+## TODO: to generate these pdfs students will have needed to do
+##       the stretch challenge in the previous tutorial. figure out
+##       the ordering for this.
+############
 
 ### Cleaning up
 
