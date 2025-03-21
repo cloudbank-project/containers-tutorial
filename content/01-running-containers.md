@@ -196,12 +196,13 @@ To exit the virtual terminal, run the command `exit` or use the keyboard shortcu
 If in the container we ran `python3 src/main.py -h`, we'd see that the python script takes some command line arguments of its own:
 
 ```bash
-usage: main.py [-h] [--sentences N] [--pdf FILENAME]
+usage: main.py [-h] [--sentences N] [--pdf FILENAME] [--txt FILENAME]
 
 optional arguments:
   -h, --help      show this help message and exit
   --sentences N   how many sentences to output
   --pdf FILENAME  output as a pdf file
+  --txt FILENAME  output as a plaintext file
 ```
 
 Since `main.py` is the container's entrypoint, any flags we put in our `docker run` command following the image name will be passed to it.  Let's try playing with them. From the terminal:

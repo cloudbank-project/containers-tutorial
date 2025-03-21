@@ -223,7 +223,7 @@ az container delete --name my-cloud-textbook
 
 ## Using cloud file stores for Azure container input/output
 
-To get files in and out of a container running in Azure, we can mount Azure file stores similarly to how we mount folders when we use `docker run` locally. Let's get some practice with this by using the `naclomi/textbook-writer` image to generate a PDF in the cloud.
+To get files in and out of a container running in Azure, we can mount Azure file stores similarly to how we mount folders when we use `docker run` locally. Let's get some practice with this by asking our docker image to export its text as a file rather than printing it to the screen.
 
 ### Creating a file store
 
@@ -263,7 +263,7 @@ After a minute or two, the storage account will become available and you'll see 
 
 ![](../img/az-storage-4.png)
 
-From this dashboard, we can see and manage the file shares that will actually contain our data. Let's create a file share to hold the PDFs our docker containers create. 
+From this dashboard, we can see and manage the file shares that will actually contain our data. Let's create a file share to hold the textbook our docker container outputs.
 
 Choose `File shares` from the menu on the left (1), and then click the `+ File share` button (2) to create a new one within our storage account:
 ![](../img/az-storage-new-fileshare.png)
@@ -286,24 +286,24 @@ We'll be brought to a summary page showing the file share. This is how we'll dow
 
 To connect the file share to our cloud containers, we'll add a few extra options to our `az container create` command:
 
-- `--azure-file-volume-account-name [NAME]` 
+- `--azure-file-volume-account-name [NAME]`
   The name of the storage account that we created.
 
 - `--azure-file-volume-account-key [KEY]`
   The key to the storage account that we created. In the command exmaple below, we retrieve it with some fancy terminal magic similar to how we got the container registry password.
 
-- `--azure-file-volume-share-name [NAME]` 
+- `--azure-file-volume-share-name [NAME]`
   The name of the file share *within* the storage account we created.
 
 - `--azure-file-volume-mount-path [CONTAINER PATH]`
   The path inside of the container to mount the share to. This is like the second half of the `-v [LOCAL PATH]:[CONTAINER PATH]` flag that you pass to `docker run` when running containers on your workstation or personal computer.
 
-In addition to the above flags that mount a file share to our container, we also need to tell the container to generate a PDF. Unlike the Docker CLI, Azure doesn't let us add extra flags when we run the container, it only lets us replace the entrypoint entirely:
+In addition to the above flags that mount a file share to our container, we also need to tell the container to generate file output instead of screen output. Unlike the Docker CLI, Azure doesn't let us add extra flags when we run the container, it only lets us replace the entrypoint entirely:
 
 - `--command-line "[COMMAND HERE]"`
   This flag will replace the container entrypoint with whatever you specify in double-quotes. This is the equivalent of `--entrypoint` when using `docker run`.
 
-We'll mount the file share to the location `/output` in our container, and then save a file there called `text.pdf` by using then entrypoint "`python3 src/main.py --pdf /output/text.pdf`".
+We'll mount the file share to the location `/output` in our container, and then save a file there called `text.txt` by using then entrypoint "`python3 src/main.py --txt /output/textbook.txt`".
 
 Copy and execute the command line below, replacing the `[ ]`-indicated blanks with their appropriate values. It's probably a good idea to first copy this content into a blank text file, replace the `[ ]`-blanks, and then copy _that_ into your terminal.
 
@@ -315,7 +315,7 @@ az container create \
    --image [PUSHED IMAGE NAME] \
    --cpu 0.5 --memory 0.5 \
    --restart-policy Never --no-wait \
-   --command-line "python3 src/main.py --pdf /output/text.pdf" \
+   --command-line "python3 src/main.py --txt /output/textbook.txt" \
    --registry-login-server [CONTAINER REGISTRY NAME].azurecr.io \
    --registry-username $(az acr credential show --name [CONTAINER REGISTRY NAME] --output tsv --query 'username') \
    --registry-password $(az acr credential show --name [CONTAINER REGISTRY NAME] --output tsv --query 'passwords[0].value') \
@@ -333,7 +333,7 @@ Once the status reports `Succeeded`, go to your storage account's web dashboard 
 
 ![](../img/az-file-dl-1.png)
 
-From here, select `Browse` on the left (1) to view the files inside the store. We should see the PDF our container created! Click it (2). This will open a file properties box, from which we can hit the `Download` button (3):
+From here, select `Browse` on the left (1) to view the files inside the store. We should see the text file our container created! Click it (2). This will open a file properties box, from which we can hit the `Download` button (3):
 
 ![](../img/az-file-dl-2.png)
 
@@ -345,11 +345,9 @@ Congratulations -- this was a lot of steps for some pretty advanced computing, a
 
 Now that the file share is created, you can rerun the container with `az container start` or create new ones that connect to the share with `az container create` as much as you like. The steps preceding the `az container create` command only have to be done once.
 
-############################
-## TODO: to generate these pdfs students will have needed to do
-##       the stretch challenge in the previous tutorial. figure out
-##       the ordering for this.
-############
+## Stretch challenge #1
+
+Did you add PDF generation support to your image in the previous tutorial's stretch challenge? If so, change your cloud container here to generate a PDF instead of a TXT file. If not, go back and add PDF support!
 
 ### Cleaning up
 

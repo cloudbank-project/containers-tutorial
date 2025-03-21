@@ -205,8 +205,8 @@ Let's start work on our textbook-writer image. Create a new folder on your compu
 Then, download the source code and data for the textbook writer here and unzip it to the same location as the Dockerfile using these commands:
 
 ```bash
-wget -P src https://raw.githubusercontent.com/naclomi/containers-tutorial/main/markov-example/src/main.py
-wget -P data https://raw.githubusercontent.com/naclomi/containers-tutorial/main/markov-example/data/mechanics-of-materials.txt
+wget -P src https://raw.githubusercontent.com/cloudbank-project/containers-tutorial/main/markov-example/src/main.py
+wget -P data https://raw.githubusercontent.com/cloudbank-project/containers-tutorial/main/markov-example/data/mechanics-of-materials.txt
 ```
 
 Then, make an empty dockerfile with the command:
