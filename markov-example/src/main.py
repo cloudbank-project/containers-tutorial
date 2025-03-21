@@ -37,8 +37,8 @@ if __name__ == "__main__":
         sys.exit(0)
 
     if args.pdf is not None:
-        os.system("echo \"%s\" | enscript -p - | ps2pdf - %s" % (out_text, args.pdf))
+        os.system("echo \"%s\" | enscript -p - | ps2pdf - %s" % (out_text.encode("utf8"), args.pdf))
     if args.txt is not None:
-        with open(args.txt, "w") as f:
+        with open(args.txt, "w", encoding="utf8") as f:
             f.write(out_text)
     sys.exit(0)
