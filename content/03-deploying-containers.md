@@ -253,7 +253,7 @@ From here, we'll be able to choose some options for the new account:
 
 Make the following selections:
 
-- **Subscription**: Make sure to select the proper subscription for this class (that includes the term `MSE544`)
+- **Subscription**: Make sure to select the proper subscription for this class (ask your course staff if you don't remember it)
 - **Storage account name**: This name has to be globally unique on Azure's cloud, so choose something that starts with your UW NetID. Unfortunately, it can only include letters and numbers (no spaces, dashes or other symbols).
 - **Redundancy**: This option controls how your data is backed up. Select **`Locally redundant storage (LRS)`**, which keeps backups of your data in the same physical datacenter as the main account. Geo-rendundant storage is more expensive and keeps backups in different physical regions of the world, which is generally good practice but overdoing it for this exercise.
 
@@ -313,6 +313,7 @@ The command will look like:
 az container create \
    --name my-cloud-textbook \
    --image [PUSHED IMAGE NAME] \
+   --os-type Linux \
    --cpu 0.5 --memory 0.5 \
    --restart-policy Never --no-wait \
    --command-line "python3 src/main.py --txt /output/textbook.txt" \
@@ -339,7 +340,7 @@ From here, select `Browse` on the left (1) to view the files inside the store. W
 
 From here, we can open the file up using your computer's file explorer:
 
-![downloaded_pdf](../img/downloaded_pdf.png)
+![downloaded_pdf](../img/downloaded_txt.png)
 
 Congratulations -- this was a lot of steps for some pretty advanced computing, and you did it!
 
