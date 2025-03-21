@@ -282,21 +282,15 @@ We'll be brought to a summary page showing the file share. This is how we'll dow
 
 ![](../img/az-storage-fileshare-back.png)
 
-Now, let's copy some connection details that we'll need when we start our container. Go to the `Access keys` page from the menu at the left (1), and copy the storage account name (2). Paste it in a text file to use later. Then, click `Show` next to one of the storage keys (3) and copy that (4). Paste it in that text file too:
-
-![](../img/az-storage-keys.png)
-
-Think of the key as like an auto-generated password for the storage account. It's important to keep others from seeing your key, to keep your data safe! If a key ever _does_ get stolen, you can easily disable it and create a new one by clicking that `Rotate key` button, which is good practice to do regularly anyway.
-
 ### Mounting file stores in containers
 
 To connect the file share to our cloud containers, we'll add a few extra options to our `az container create` command:
 
 - `--azure-file-volume-account-name [NAME]` 
-  The name of the storage account that we copied earlier
+  The name of the storage account that we created.
 
 - `--azure-file-volume-account-key [KEY]`
-  The key to the storage account that we copied earlier.
+  The key to the storage account that we created. In the command exmaple below, we retrieve it with some fancy terminal magic similar to how we got the container registry password.
 
 - `--azure-file-volume-share-name [NAME]` 
   The name of the file share *within* the storage account we created.
@@ -326,7 +320,7 @@ az container create \
    --registry-username $(az acr credential show --name [CONTAINER REGISTRY NAME] --output tsv --query 'username') \
    --registry-password $(az acr credential show --name [CONTAINER REGISTRY NAME] --output tsv --query 'passwords[0].value') \
    --azure-file-volume-account-name [STORAGE ACCOUNT NAME] \
-   --azure-file-volume-account-key [STORAGE ACCOUNT KEY] \
+   --azure-file-volume-account-key $(az storage account keys list --account-name [STORAGE ACCOUNT NAME] --query '[0].value' --output tsv) \
    --azure-file-volume-share-name [FILE SHARE NAME] \
    --azure-file-volume-mount-path output
 ```
