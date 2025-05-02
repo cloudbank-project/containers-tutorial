@@ -1,4 +1,7 @@
-FROM python:3.6-stretch
+# For cross-platform builds, enable containerd image registry in settings,
+# reboot host PC, and then run:
+# docker buildx build --push -t naclomi/textbook-writer --platform=linux/arm64,linux/amd64 .
+FROM python:3.13-bookworm
 LABEL maintainer="naomila@uw.edu"
 LABEL description="Write a matsci textbook for fun and profit"
 
