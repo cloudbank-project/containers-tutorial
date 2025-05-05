@@ -159,7 +159,7 @@ To run a container as an Azure Container Instance we'll use the `az container cr
 ```bash
 az container create \
   --name [INSTANCE NAME] \
-  --image [PUSHED IMAGE NAME]
+  --image [PUSHED IMAGE NAME] \
   --os-type Linux \
   --cpu [CORES] \
   --memory [GB RAM] \
