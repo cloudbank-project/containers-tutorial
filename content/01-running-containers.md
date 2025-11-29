@@ -25,6 +25,7 @@ The process for installing Docker varies across operating systems. Since our VM 
 Start by opening a new terminal usin the terminal menu (`Terminal -> New Terminal`):
 
 ![new_terminal](../img/new_terminal.png)
+![new_terminal](./img/new_terminal.png)
 
 
 In the terminal, we'll tell Linux where to find the Docker software we want to install. Run these commands:
